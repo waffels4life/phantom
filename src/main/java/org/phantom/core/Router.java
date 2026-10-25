@@ -1,6 +1,5 @@
 package org.phantom.core;
 
-import org.jetbrains.annotations.NotNull;
 import org.phantom.infra.Config;
 import org.phantom.deception.FakeService;
 import org.phantom.http.HttpRequest;
@@ -11,6 +10,7 @@ import org.phantom.security.attackEven.EventEngine;
 import org.phantom.session.SessionManager;
 
 import java.util.List;
+import java.util.Objects;
 
 public class Router {
     private static final List<String> REAL_PATHS = Config.getRealPaths();
@@ -18,20 +18,21 @@ public class Router {
             "/admin", "/api/internal", "/config", "/env", "/.git"
     );
     public HttpResponse route(HttpRequest httpRequest) {
+        Objects.requireNonNull(httpRequest, "httpRequest");
         String path = httpRequest.getPath();
 
         // dashboard
-        if (path.equals("/dashboard")) {
+        if (path.equals("/dashboard"))
             return HttpResponse.html(DashboardService.buildPage());
-        }
 
         if (REAL_PATHS.contains(path))
             return handleReal(path);
-        else
-            return handleFake(httpRequest);
+
+        else return handleFake(httpRequest);
 
     }
     private HttpResponse handleReal(String path) {
+        Objects.requireNonNull(path, "path");
         return switch (path) {
             case "/"          -> HttpResponse.ok("Welcome.");
             case "/hello"     -> HttpResponse.ok("Hello!");
@@ -40,10 +41,11 @@ public class Router {
             default           -> HttpResponse.notFound();
         };
     }
-    private @NotNull HttpResponse handleFake(@NotNull HttpRequest httpRequest) {
+    private HttpResponse handleFake(HttpRequest httpRequest) {
+        Objects.requireNonNull(httpRequest, "httpRequest");
 
         String clientIP = httpRequest.getClientIP();
-        String path     = httpRequest.getPath();
+        String path = httpRequest.getPath();
 
         // threat tracking
         ThreatTracker.record(clientIP);
